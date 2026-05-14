@@ -112,9 +112,12 @@
         <div class="button-row" id="quickButtons">
           <button type="button" data-log-type="up">up</button>
           <button type="button" data-log-type="grab">grab</button>
-          <button type="button" data-log-type="Meal">Meal</button>
-          <button type="button" data-log-type="Out">Out</button>
+          <button type="button" data-log-type="meal">meal</button>
+          <button type="button" data-log-type="out">out</button>
           <button type="button" data-log-type="chores">chores</button>
+          <button type="button" data-log-type="nap">nap</button>
+          <button type="button" data-log-type="waso">waso</button>
+          <button type="button" data-log-type="bed">bed</button>
         </div>
       </section>
 
@@ -133,7 +136,7 @@
     </main>
 
     <script>
-      const LOG_TYPES = ['up', 'grab', 'Meal', 'Out', 'chores'];
+      const LOG_TYPES = ['up', 'grab', 'meal', 'out', 'chores', 'nap', 'waso', 'bed'];
       const STORAGE_KEY = 'paper-planner-life-log-v1';
 
       let selectedDate = dateKey(new Date());
