@@ -12,7 +12,7 @@
       }
       * { box-sizing: border-box; }
       body { margin: 0; }
-      button, input, select { font: inherit; }
+      button, input, select, textarea { font: inherit; }
       button {
         min-height: 40px;
         border: 1px solid #c9c7be;
@@ -24,8 +24,7 @@
       }
       button:hover:not(:disabled) { background: #ece9df; }
       button:disabled { color: #999; cursor: not-allowed; }
-      input, select {
-        min-height: 40px;
+      input, select, textarea {
         width: 100%;
         border: 1px solid #c9c7be;
         border-radius: 6px;
@@ -33,12 +32,14 @@
         color: #222;
         padding: 8px 10px;
       }
+      input, select { min-height: 40px; }
+      textarea { min-height: 110px; resize: vertical; }
       .app {
         width: min(960px, 100%);
         margin: 0 auto;
         padding: 24px;
       }
-      .top-bar, .quick-add, .logs, .copy-preview { margin-bottom: 18px; }
+      .top-bar, .quick-add, .logs, .copy-preview, .backup { margin-bottom: 18px; }
       .top-bar {
         display: grid;
         grid-template-columns: 92px 1fr 92px;
@@ -48,22 +49,23 @@
       .date-block { display: grid; justify-items: center; gap: 2px; }
       .date-block span { color: #777264; font-size: 0.85rem; }
       .date-block strong { font-size: clamp(1.2rem, 3vw, 1.8rem); text-align: center; }
-      .quick-add { display: grid; gap: 10px; }
+      .quick-add, .backup { display: grid; gap: 10px; }
       .button-row {
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 8px;
       }
       .button-row button { min-height: 48px; }
-      .logs-header {
+      .logs-header, .backup-actions {
         display: flex;
         align-items: center;
-        justify-content: space-between;
         gap: 12px;
       }
+      .logs-header { justify-content: space-between; }
+      .backup-actions { flex-wrap: wrap; }
       h1, h2, p { margin: 0; }
       h1 { font-size: 1.25rem; }
-      h2 { margin-bottom: 8px; font-size: 1rem; }
+      h2 { font-size: 1rem; }
       .empty { margin-top: 12px; color: #777264; }
       .log-list { display: grid; gap: 8px; margin-top: 12px; }
       .log-row {
@@ -73,7 +75,7 @@
         align-items: center;
       }
       .delete { color: #8b2f2f; }
-      .copy-preview { border-top: 1px solid #d8d5ca; padding-top: 16px; }
+      .copy-preview, .backup { border-top: 1px solid #d8d5ca; padding-top: 16px; }
       pre {
         min-height: 120px;
         margin: 0;
@@ -133,6 +135,15 @@
         <h2>コピー内容</h2>
         <pre id="copyPreview"></pre>
       </section>
+
+      <section class="backup" aria-label="バックアップと復元">
+        <h2>バックアップ</h2>
+        <div class="backup-actions">
+          <button type="button" id="backupCopyButton">バックアップをコピー</button>
+          <button type="button" id="restoreButton">貼り付け内容から復元</button>
+        </div>
+        <textarea id="backupText" placeholder="復元するときは、ここにバックアップを貼り付けます"></textarea>
+      </section>
     </main>
 
     <script>
@@ -150,6 +161,9 @@
       const copyButton = document.querySelector('#copyButton');
       const logListElement = document.querySelector('#logList');
       const copyPreviewElement = document.querySelector('#copyPreview');
+      const backupCopyButton = document.querySelector('#backupCopyButton');
+      const restoreButton = document.querySelector('#restoreButton');
+      const backupTextElement = document.querySelector('#backupText');
 
       function pad(value) {
         return String(value).padStart(2, '0');
@@ -203,6 +217,14 @@
 
       function saveStore() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+      }
+
+      function backupText() {
+        return JSON.stringify({
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          data: store,
+        }, null, 2);
       }
 
       function currentLogs() {
@@ -280,6 +302,44 @@
         }
       }
 
+      async function copyBackup() {
+        const text = backupText();
+        backupTextElement.value = text;
+        try {
+          await navigator.clipboard.writeText(text);
+          backupCopyButton.textContent = 'コピー済み';
+          window.setTimeout(() => {
+            backupCopyButton.textContent = 'バックアップをコピー';
+          }, 1500);
+        } catch {
+          backupTextElement.focus();
+          backupTextElement.select();
+          document.execCommand('copy');
+        }
+      }
+
+      function restoreBackup() {
+        let parsed;
+        try {
+          parsed = JSON.parse(backupTextElement.value);
+        } catch {
+          alert('バックアップの形式が正しくありません。');
+          return;
+        }
+        const nextStore = parsed && parsed.data ? parsed.data : parsed;
+        if (!nextStore || typeof nextStore !== 'object' || Array.isArray(nextStore)) {
+          alert('復元できるデータが見つかりません。');
+          return;
+        }
+        if (!confirm('現在の保存データを、貼り付けたバックアップで置き換えます。よろしいですか？')) {
+          return;
+        }
+        store = nextStore;
+        saveStore();
+        render();
+        alert('復元しました。');
+      }
+
       function renderLogs() {
         const logs = currentLogs();
         logListElement.innerHTML = '';
@@ -350,6 +410,8 @@
         render();
       });
       copyButton.addEventListener('click', copyPlainText);
+      backupCopyButton.addEventListener('click', copyBackup);
+      restoreButton.addEventListener('click', restoreBackup);
       quickButtonsElement.addEventListener('click', (event) => {
         const button = event.target.closest('[data-log-type]');
         if (button) addLog(button.dataset.logType);
