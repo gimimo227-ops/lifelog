@@ -1,630 +1,70 @@
 <!doctype html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LifeLog</title>
-    <meta name="apple-mobile-web-app-title" content="LifeLog" />
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
-    <style>
-      :root {
-        color: #222;
-        background: #f7f7f4;
-        font-family:
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          "Segoe UI",
-          sans-serif;
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-      }
-
-      button,
-      input,
-      select {
-        font: inherit;
-      }
-
-      button {
-        min-height: 38px;
-        border: 1px solid #c9c7be;
-        border-radius: 6px;
-        background: #fff;
-        color: #222;
-        cursor: pointer;
-        font-weight: 650;
-      }
-
-      button:hover:not(:disabled) {
-        background: #ece9df;
-      }
-
-      button:disabled {
-        color: #999;
-        cursor: not-allowed;
-      }
-
-      input,
-      select {
-        min-height: 38px;
-        width: 100%;
-        border: 1px solid #c9c7be;
-        border-radius: 6px;
-        background: #fff;
-        color: #222;
-        padding: 8px 10px;
-      }
-
-      .app {
-        width: min(820px, 100%);
-        margin: 0 auto;
-        padding: 24px;
-      }
-
-      .top-bar,
-      .quick-add,
-      .logs,
-      .copy-preview {
-        margin-bottom: 18px;
-      }
-
-      .top-bar {
-        display: grid;
-        grid-template-columns: 92px 1fr 92px;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .date-block {
-        display: grid;
-        justify-items: center;
-        gap: 2px;
-      }
-
-      .date-block span {
-        color: #777264;
-        font-size: 0.85rem;
-      }
-
-      .date-block strong {
-        font-size: clamp(1.2rem, 3vw, 1.8rem);
-        text-align: center;
-      }
-
-      .quick-add {
-        display: grid;
-        gap: 10px;
-      }
-
-      .button-row {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 8px;
-      }
-
-      .button-row button {
-        min-height: 44px;
-      }
-
-      .logs-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-      }
-
-      h1,
-      h2,
-      p {
-        margin: 0;
-      }
-
-      h1 {
-        font-size: 1.25rem;
-      }
-
-      h2 {
-        margin-bottom: 8px;
-        font-size: 1rem;
-      }
-
-      .empty {
-        margin-top: 12px;
-        color: #777264;
-      }
-
-      .log-list {
-        display: grid;
-        gap: 8px;
-        margin-top: 12px;
-      }
-
-      .log-row {
-        display: grid;
-        grid-template-columns: 96px 104px minmax(0, 1fr) 64px;
-        gap: 8px;
-        align-items: center;
-      }
-
-      .delete {
-        color: #8b2f2f;
-      }
-
-      .copy-preview {
-        border-top: 1px solid #d8d5ca;
-        padding-top: 16px;
-      }
-
-      .backup {
-        display: grid;
-        gap: 8px;
-      }
-
-      .backup-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      textarea {
-        min-height: 110px;
-        width: 100%;
-        border: 1px solid #c9c7be;
-        border-radius: 6px;
-        background: #fff;
-        color: #222;
-        padding: 8px 10px;
-        font: inherit;
-        resize: vertical;
-      }
-
-      pre {
-        min-height: 120px;
-        margin: 0;
-        overflow: auto;
-        border: 1px solid #d8d5ca;
-        border-radius: 6px;
-        background: #fff;
-        padding: 12px;
-        white-space: pre-wrap;
-        word-break: break-word;
-        line-height: 1.5;
-      }
-
-      @media (max-width: 640px) {
-        .app {
-          padding: 12px;
-        }
-
-        .top-bar {
-          grid-template-columns: 74px 1fr 74px;
-          gap: 8px;
-        }
-
-        .button-row {
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 6px;
-        }
-
-        .button-row button {
-          min-height: 40px;
-          padding: 6px 4px;
-          font-size: 0.9rem;
-        }
-
-        .logs-header {
-          align-items: stretch;
-          flex-direction: column;
-        }
-
-        .log-row {
-          grid-template-columns: 88px 1fr;
-          gap: 6px;
-          align-items: start;
-          border-top: 1px solid #e2dfd5;
-          padding-top: 8px;
-        }
-
-        .log-row select {
-          grid-column: 1 / -1;
-        }
-
-        .memo-input {
-          grid-column: 1 / -1;
-        }
-
-        .delete {
-          grid-column: 2;
-          justify-self: end;
-          width: 56px;
-          padding: 6px 4px;
-        }
-
-        .backup-actions button {
-          flex: 1 1 140px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <main class="app">
-      <header class="top-bar">
-        <button type="button" id="prevDate">剂日</button>
-        <div class="date-block">
-          <span>表示日</span>
-          <strong id="displayDate"></strong>
-        </div>
-        <button type="button" id="nextDate">翌日</button>
-      </header>
-
-      <section class="quick-add" aria-label="ログ追加">
-        <input id="draftMemo" type="text" placeholder="追加時のメモ（任意）" />
-        <div class="button-row" id="quickButtons">
-          <button type="button" data-log-type="up">up</button>
-          <button type="button" data-log-type="grab">grab</button>
-          <button type="button" data-log-type="meal">meal</button>
-          <button type="button" data-log-type="out">out</button>
-          <button type="button" data-log-type="chores">chores</button>
-          <button type="button" data-log-type="nap">nap</button>
-          <button type="button" data-log-type="waso">waso</button>
-          <button type="button" data-log-type="bed">bed</button>
-          <button type="button" data-log-type="Bath">Bath</button>
-          <button type="button" data-log-type="Bored">Bored</button>
-        </div>
-      </section>
-
-      <section class="logs" aria-label="ログ一覧">
-        <div class="logs-header">
-          <h1>生活ログ</h1>
-          <button type="button" id="copyButton">テキストコピー</button>
-        </div>
-        <div id="logList"></div>
-      </section>
-
-      <section class="copy-preview" aria-label="コピー内容">
-        <h2>コピー内容</h2>
-        <pre id="copyPreview"></pre>
-      </section>
-
-      <section class="backup" aria-label="バックアップと復元">
-        <h2>バックアップ</h2>
-        <div class="backup-actions">
-          <button type="button" id="backupCopyButton">バックアップをコピー</button>
-          <button type="button" id="restoreButton">貼り付け内容から復元</button>
-        </div>
-        <textarea id="backupText" placeholder="復元するときは、ここにバックアップを貼り付けます"></textarea>
-      </section>
-    </main>
-
-    <script>
-      const LOG_TYPES = ['up', 'grab', 'meal', 'out', 'chores', 'nap', 'waso', 'bed', 'Bath', 'Bored'];
-      const STORAGE_KEY = 'paper-planner-life-log-v1';
-
-      let selectedDate = dateKey(new Date());
-      let store = loadStore();
-
-      const displayDateElement = document.querySelector('#displayDate');
-      const prevDateButton = document.querySelector('#prevDate');
-      const nextDateButton = document.querySelector('#nextDate');
-      const draftMemoInput = document.querySelector('#draftMemo');
-      const quickButtonsElement = document.querySelector('#quickButtons');
-      const copyButton = document.querySelector('#copyButton');
-      const logListElement = document.querySelector('#logList');
-      const copyPreviewElement = document.querySelector('#copyPreview');
-      const backupCopyButton = document.querySelector('#backupCopyButton');
-      const restoreButton = document.querySelector('#restoreButton');
-      const backupTextElement = document.querySelector('#backupText');
-
-      function pad(value) {
-        return String(value).padStart(2, '0');
-      }
-
-      function dateKey(date) {
-        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-      }
-
-      function displayDate(key) {
-        const [year, month, day] = key.split('-').map(Number);
-        const date = new Date(year, month - 1, day);
-        return new Intl.DateTimeFormat('ja-JP', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          weekday: 'short',
-        }).format(date);
-      }
-
-      function shiftDate(key, days) {
-        const [year, month, day] = key.split('-').map(Number);
-        return dateKey(new Date(year, month - 1, day + days));
-      }
-
-      function roundToFiveMinutes(date) {
-        const hours = date.getHours();
-        const minutes = Math.round(date.getMinutes() / 5) * 5;
-
-        if (minutes === 60) {
-          return hours === 23 ? '23:55' : `${pad(hours + 1)}:00`;
-        }
-
-        return `${pad(hours)}:${pad(minutes)}`;
-      }
-
-      function normalizeTime(value) {
-        if (!value) {
-          return '00:00';
-        }
-
-        const [hourPart, minutePart = '0'] = value.split(':');
-        const hours = Math.min(23, Math.max(0, Number(hourPart) || 0));
-        const minutes = Math.min(55, Math.max(0, Math.round((Number(minutePart) || 0) / 5) * 5));
-        return `${pad(hours)}:${pad(minutes)}`;
-      }
-
-      function loadStore() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          return raw ? JSON.parse(raw) : {};
-        } catch {
-          return {};
-        }
-      }
-
-      function saveStore() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-      }
-
-      function backupText() {
-        return JSON.stringify(
-          {
-            version: 1,
-            exportedAt: new Date().toISOString(),
-            data: store,
-          },
-          null,
-          2,
-        );
-      }
-
-      function currentLogs() {
-        return sortLogs(store[selectedDate] || []);
-      }
-
-      function setCurrentLogs(logs) {
-        store = {
-          ...store,
-          [selectedDate]: sortLogs(logs),
-        };
-        saveStore();
-        render();
-      }
-
-      function sortLogs(logs) {
-        return [...logs].sort((a, b) => {
-          const timeCompare = a.time.localeCompare(b.time);
-          if (timeCompare !== 0) {
-            return timeCompare;
-          }
-          return a.createdAt - b.createdAt;
-        });
-      }
-
-      function createId() {
-        if (crypto.randomUUID) {
-          return crypto.randomUUID();
-        }
-
-        return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      }
-
-      function addLog(type) {
-        const logs = currentLogs();
-        const log = {
-          id: createId(),
-          time: roundToFiveMinutes(new Date()),
-          type,
-          memo: draftMemoInput.value.trim(),
-          createdAt: Date.now(),
-        };
-
-        draftMemoInput.value = '';
-        setCurrentLogs([...logs, log]);
-      }
-
-      function updateLog(id, field, value) {
-        const logs = currentLogs().map((log) => {
-          if (log.id !== id) {
-            return log;
-          }
-
-          return {
-            ...log,
-            [field]: field === 'time' ? normalizeTime(value) : value,
-          };
-        });
-
-        setCurrentLogs(logs);
-      }
-
-      function deleteLog(id) {
-        setCurrentLogs(currentLogs().filter((log) => log.id !== id));
-      }
-
-      function plainText() {
-        const lines = [displayDate(selectedDate)];
-
-        for (const log of currentLogs()) {
-          const memo = log.memo.trim();
-          lines.push(`${log.time} ${log.type}${memo ? ` - ${memo}` : ''}`);
-        }
-
-        return lines.join('\n');
-      }
-
-      async function copyPlainText() {
-        const text = plainText();
-
-        try {
-          await navigator.clipboard.writeText(text);
-          copyButton.textContent = 'コピー済み';
-          window.setTimeout(() => {
-            copyButton.textContent = 'テキストコピー';
-          }, 1500);
-        } catch {
-          const selection = window.getSelection();
-          const range = document.createRange();
-          range.selectNodeContents(copyPreviewElement);
-          selection.removeAllRanges();
-          selection.addRange(range);
-          document.execCommand('copy');
-          selection.removeAllRanges();
-        }
-      }
-
-      async function copyBackup() {
-        const text = backupText();
-        backupTextElement.value = text;
-
-        try {
-          await navigator.clipboard.writeText(text);
-          backupCopyButton.textContent = 'コピー済み';
-          window.setTimeout(() => {
-            backupCopyButton.textContent = 'バックアップをコピー';
-          }, 1500);
-        } catch {
-          backupTextElement.focus();
-          backupTextElement.select();
-          document.execCommand('copy');
-        }
-      }
-
-      function restoreBackup() {
-        if (!backupTextElement.value.trim()) {
-          alert('復元するバックアップをテキスト欄に貼り付けてください。');
-          return;
-        }
-
-        let parsed;
-
-        try {
-          parsed = JSON.parse(backupTextElement.value);
-        } catch {
-          alert('バックアップの形式が正しくありません。');
-          return;
-        }
-
-        const nextStore = parsed && parsed.data ? parsed.data : parsed;
-
-        if (!nextStore || typeof nextStore !== 'object' || Array.isArray(nextStore)) {
-          alert('復元できるデータが見つかりません。');
-          return;
-        }
-
-        if (!confirm('現在の保存データを、貼り付けたバックアップで置き換えます。よろしいですか？')) {
-          return;
-        }
-
-        store = nextStore;
-        saveStore();
-        render();
-        alert('復元しました。');
-      }
-
-      function renderLogs() {
-        const logs = currentLogs();
-        logListElement.innerHTML = '';
-        copyButton.disabled = logs.length === 0;
-
-        if (logs.length === 0) {
-          const empty = document.createElement('p');
-          empty.className = 'empty';
-          empty.textContent = 'まだログがありません。';
-          logListElement.append(empty);
-          return;
-        }
-
-        const list = document.createElement('div');
-        list.className = 'log-list';
-
-        for (const log of logs) {
-          const row = document.createElement('article');
-          row.className = 'log-row';
-
-          const timeInput = document.createElement('input');
-          timeInput.type = 'time';
-          timeInput.step = '300';
-          timeInput.value = log.time;
-          timeInput.setAttribute('aria-label', '時刻');
-          timeInput.addEventListener('change', (event) => updateLog(log.id, 'time', event.target.value));
-
-          const typeSelect = document.createElement('select');
-          typeSelect.setAttribute('aria-label', '項目');
-          typeSelect.addEventListener('change', (event) => updateLog(log.id, 'type', event.target.value));
-
-          for (const type of LOG_TYPES) {
-            const option = document.createElement('option');
-            option.value = type;
-            option.textContent = type;
-            option.selected = log.type === type;
-            typeSelect.append(option);
-          }
-
-          const memoInput = document.createElement('input');
-          memoInput.className = 'memo-input';
-          memoInput.type = 'text';
-          memoInput.value = log.memo;
-          memoInput.placeholder = 'メモ';
-          memoInput.setAttribute('aria-label', 'メモ');
-          memoInput.addEventListener('change', (event) => updateLog(log.id, 'memo', event.target.value));
-
-          const deleteButton = document.createElement('button');
-          deleteButton.type = 'button';
-          deleteButton.className = 'delete';
-          deleteButton.textContent = '削除';
-          deleteButton.addEventListener('click', () => deleteLog(log.id));
-
-          row.append(timeInput, typeSelect, memoInput, deleteButton);
-          list.append(row);
-        }
-
-        logListElement.append(list);
-      }
-
-      function render() {
-        displayDateElement.textContent = displayDate(selectedDate);
-        renderLogs();
-        copyPreviewElement.textContent = plainText();
-      }
-
-      prevDateButton.addEventListener('click', () => {
-        selectedDate = shiftDate(selectedDate, -1);
-        render();
-      });
-
-      nextDateButton.addEventListener('click', () => {
-        selectedDate = shiftDate(selectedDate, 1);
-        render();
-      });
-
-      copyButton.addEventListener('click', copyPlainText);
-      backupCopyButton.addEventListener('click', copyBackup);
-      restoreButton.addEventListener('click', restoreBackup);
-      quickButtonsElement.addEventListener('click', (event) => {
-        const button = event.target.closest('[data-log-type]');
-
-        if (button) {
-          addLog(button.dataset.logType);
-        }
-      });
-
-      render();
-    </script>
-  </body>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LifeLog</title>
+<meta name="apple-mobile-web-app-title" content="LifeLog" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<style>
+:root{color:#222;background:#f7f7f4;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button{min-height:38px;border:1px solid #c9c7be;border-radius:6px;background:#fff;color:#222;cursor:pointer;font-weight:650}button:hover:not(:disabled){background:#ece9df}button:disabled{color:#999;cursor:not-allowed}input,select,textarea{width:100%;border:1px solid #c9c7be;border-radius:6px;background:#fff;color:#222;padding:8px 10px}input,select{min-height:38px}textarea{min-height:110px;resize:vertical}.app{width:min(820px,100%);margin:0 auto;padding:24px}.top-bar,.quick-add,.logs,.copy-preview,.backup{margin-bottom:18px}.top-bar{display:grid;grid-template-columns:92px 1fr 92px;align-items:center;gap:12px}.date-block{display:grid;justify-items:center;gap:2px}.date-block span{color:#777264;font-size:.85rem}.date-block strong{font-size:clamp(1.2rem,3vw,1.8rem);text-align:center}.quick-add,.backup{display:grid;gap:10px}.button-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.button-row button{min-height:44px}.logs-header,.backup-actions{display:flex;align-items:center;gap:12px}.logs-header{justify-content:space-between}.backup-actions{flex-wrap:wrap}h1,h2,p{margin:0}h1{font-size:1.25rem}h2{font-size:1rem}.empty{margin-top:12px;color:#777264}.log-list{display:grid;gap:8px;margin-top:12px}.log-row{display:grid;grid-template-columns:96px 104px minmax(0,1fr) 64px;gap:8px;align-items:center}.delete{color:#8b2f2f}.copy-preview,.backup{border-top:1px solid #d8d5ca;padding-top:16px}pre{min-height:120px;margin:0;overflow:auto;border:1px solid #d8d5ca;border-radius:6px;background:#fff;padding:12px;white-space:pre-wrap;word-break:break-word;line-height:1.5}@media(max-width:640px){.app{padding:12px}.top-bar{grid-template-columns:74px 1fr 74px;gap:8px}.button-row{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.button-row button{min-height:40px;padding:6px 4px;font-size:.9rem}.logs-header{align-items:stretch;flex-direction:column}.log-row{grid-template-columns:88px 1fr;gap:6px;align-items:start;border-top:1px solid #e2dfd5;padding-top:8px}.log-row select{grid-column:1/-1}.memo-input{grid-column:1/-1}.delete{grid-column:2;justify-self:end;width:56px;padding:6px 4px}.backup-actions button{flex:1 1 140px}}
+</style>
+</head>
+<body>
+<main class="app">
+<header class="top-bar"><button type="button" id="prevDate">前日</button><div class="date-block"><span>表示日</span><strong id="displayDate"></strong></div><button type="button" id="nextDate">翌日</button></header>
+<section class="quick-add" aria-label="ログ追加"><input id="draftMemo" type="text" placeholder="追加時のメモ（任意）" /><div class="button-row" id="quickButtons"><button type="button" data-log-type="up">up</button><button type="button" data-log-type="grab">grab</button><button type="button" data-log-type="meal">meal</button><button type="button" data-log-type="out">out</button><button type="button" data-log-type="chores">chores</button><button type="button" data-log-type="nap">nap</button><button type="button" data-log-type="waso">waso</button><button type="button" data-log-type="bed">bed</button><button type="button" data-log-type="Bath">Bath</button><button type="button" data-log-type="Bored">Bored</button></div></section>
+<section class="logs" aria-label="ログ一覧"><div class="logs-header"><h1>生活ログ</h1><button type="button" id="copyButton">テキストコピー</button></div><div id="logList"></div></section>
+<section class="copy-preview" aria-label="コピー内容"><h2>コピー内容</h2><pre id="copyPreview"></pre></section>
+<section class="backup" aria-label="バックアップと復元"><h2>バックアップ</h2><div class="backup-actions"><button type="button" id="backupCopyButton">バックアップをコピー</button><button type="button" id="restoreButton">貼り付け内容から復元</button></div><textarea id="backupText" placeholder="復元するときは、ここにバックアップを貼り付けます"></textarea></section>
+</main>
+<script>
+const LOG_TYPES=['up','grab','meal','out','chores','nap','waso','bed','Bath','Bored'];
+const STORAGE_KEY='paper-planner-life-log-v1';
+let selectedDate=dateKey(new Date());
+let store=loadStore();
+const displayDateElement=document.querySelector('#displayDate');
+const prevDateButton=document.querySelector('#prevDate');
+const nextDateButton=document.querySelector('#nextDate');
+const draftMemoInput=document.querySelector('#draftMemo');
+const quickButtonsElement=document.querySelector('#quickButtons');
+const copyButton=document.querySelector('#copyButton');
+const logListElement=document.querySelector('#logList');
+const copyPreviewElement=document.querySelector('#copyPreview');
+const backupCopyButton=document.querySelector('#backupCopyButton');
+const restoreButton=document.querySelector('#restoreButton');
+const backupTextElement=document.querySelector('#backupText');
+function pad(value){return String(value).padStart(2,'0')}
+function dateKey(date){return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`}
+function displayDate(key){const [year,month,day]=key.split('-').map(Number);return new Intl.DateTimeFormat('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'}).format(new Date(year,month-1,day))}
+function shiftDate(key,days){const [year,month,day]=key.split('-').map(Number);return dateKey(new Date(year,month-1,day+days))}
+function roundToFiveMinutes(date){const hours=date.getHours();const minutes=Math.round(date.getMinutes()/5)*5;if(minutes===60)return hours===23?'23:55':`${pad(hours+1)}:00`;return `${pad(hours)}:${pad(minutes)}`}
+function normalizeTime(value){if(!value)return '00:00';const [hourPart,minutePart='0']=value.split(':');const hours=Math.min(23,Math.max(0,Number(hourPart)||0));const minutes=Math.min(55,Math.max(0,Math.round((Number(minutePart)||0)/5)*5));return `${pad(hours)}:${pad(minutes)}`}
+function loadStore(){try{const raw=localStorage.getItem(STORAGE_KEY);return raw?JSON.parse(raw):{}}catch{return {}}}
+function saveStore(){localStorage.setItem(STORAGE_KEY,JSON.stringify(store))}
+function backupText(){return JSON.stringify({version:1,exportedAt:new Date().toISOString(),data:store},null,2)}
+function currentLogs(){return sortLogs(store[selectedDate]||[])}
+function setCurrentLogs(logs){store={...store,[selectedDate]:sortLogs(logs)};saveStore();render()}
+function sortLogs(logs){return [...logs].sort((a,b)=>{const timeCompare=a.time.localeCompare(b.time);if(timeCompare!==0)return timeCompare;return a.createdAt-b.createdAt})}
+function createId(){if(crypto.randomUUID)return crypto.randomUUID();return `${Date.now()}-${Math.random().toString(36).slice(2)}`}
+function addLog(type){const log={id:createId(),time:roundToFiveMinutes(new Date()),type,memo:draftMemoInput.value.trim(),createdAt:Date.now()};draftMemoInput.value='';setCurrentLogs([...currentLogs(),log])}
+function updateLog(id,field,value){const logs=currentLogs().map(log=>log.id===id?{...log,[field]:field==='time'?normalizeTime(value):value}:log);setCurrentLogs(logs)}
+function deleteLog(id){setCurrentLogs(currentLogs().filter(log=>log.id!==id))}
+function plainText(){const lines=[displayDate(selectedDate)];for(const log of currentLogs()){const memo=log.memo.trim();lines.push(`${log.time} ${log.type}${memo?` - ${memo}`:''}`)}return lines.join('\n')}
+async function copyPlainText(){const text=plainText();try{await navigator.clipboard.writeText(text);copyButton.textContent='コピー済み';setTimeout(()=>copyButton.textContent='テキストコピー',1500)}catch{const selection=getSelection();const range=document.createRange();range.selectNodeContents(copyPreviewElement);selection.removeAllRanges();selection.addRange(range);document.execCommand('copy');selection.removeAllRanges()}}
+async function copyBackup(){const text=backupText();backupTextElement.value=text;try{await navigator.clipboard.writeText(text);backupCopyButton.textContent='コピー済み';setTimeout(()=>backupCopyButton.textContent='バックアップをコピー',1500)}catch{backupTextElement.focus();backupTextElement.select();document.execCommand('copy')}}
+function restoreBackup(){if(!backupTextElement.value.trim()){alert('復元するバックアップをテキスト欄に貼り付けてください。');return}let parsed;try{parsed=JSON.parse(backupTextElement.value)}catch{alert('バックアップの形式が正しくありません。');return}const nextStore=parsed&&parsed.data?parsed.data:parsed;if(!nextStore||typeof nextStore!=='object'||Array.isArray(nextStore)){alert('復元できるデータが見つかりません。');return}if(!confirm('現在の保存データを、貼り付けたバックアップで置き換えます。よろしいですか？'))return;store=nextStore;saveStore();render();alert('復元しました。')}
+function renderLogs(){const logs=currentLogs();logListElement.innerHTML='';copyButton.disabled=logs.length===0;if(logs.length===0){const empty=document.createElement('p');empty.className='empty';empty.textContent='まだログがありません。';logListElement.append(empty);return}const list=document.createElement('div');list.className='log-list';for(const log of logs){const row=document.createElement('article');row.className='log-row';const timeInput=document.createElement('input');timeInput.type='time';timeInput.step='300';timeInput.value=log.time;timeInput.setAttribute('aria-label','時刻');timeInput.addEventListener('change',event=>updateLog(log.id,'time',event.target.value));const typeSelect=document.createElement('select');typeSelect.setAttribute('aria-label','項目');typeSelect.addEventListener('change',event=>updateLog(log.id,'type',event.target.value));for(const type of LOG_TYPES){const option=document.createElement('option');option.value=type;option.textContent=type;option.selected=log.type===type;typeSelect.append(option)}const memoInput=document.createElement('input');memoInput.className='memo-input';memoInput.type='text';memoInput.value=log.memo;memoInput.placeholder='メモ';memoInput.setAttribute('aria-label','メモ');memoInput.addEventListener('change',event=>updateLog(log.id,'memo',event.target.value));const deleteButton=document.createElement('button');deleteButton.type='button';deleteButton.className='delete';deleteButton.textContent='削除';deleteButton.addEventListener('click',()=>deleteLog(log.id));row.append(timeInput,typeSelect,memoInput,deleteButton);list.append(row)}logListElement.append(list)}
+function render(){displayDateElement.textContent=displayDate(selectedDate);renderLogs();copyPreviewElement.textContent=plainText()}
+prevDateButton.addEventListener('click',()=>{selectedDate=shiftDate(selectedDate,-1);render()});
+nextDateButton.addEventListener('click',()=>{selectedDate=shiftDate(selectedDate,1);render()});
+copyButton.addEventListener('click',copyPlainText);
+backupCopyButton.addEventListener('click',copyBackup);
+restoreButton.addEventListener('click',restoreBackup);
+quickButtonsElement.addEventListener('click',event=>{const button=event.target.closest('[data-log-type]');if(button)addLog(button.dataset.logType)});
+render();
+</script>
+</body>
 </html>
