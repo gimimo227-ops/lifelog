@@ -14,7 +14,7 @@
       body { margin: 0; }
       button, input, select, textarea { font: inherit; }
       button {
-        min-height: 40px;
+        min-height: 38px;
         border: 1px solid #c9c7be;
         border-radius: 6px;
         background: #fff;
@@ -32,10 +32,10 @@
         color: #222;
         padding: 8px 10px;
       }
-      input, select { min-height: 40px; }
+      input, select { min-height: 38px; }
       textarea { min-height: 110px; resize: vertical; }
       .app {
-        width: min(960px, 100%);
+        width: min(820px, 100%);
         margin: 0 auto;
         padding: 24px;
       }
@@ -52,10 +52,10 @@
       .quick-add, .backup { display: grid; gap: 10px; }
       .button-row {
         display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 8px;
       }
-      .button-row button { min-height: 48px; }
+      .button-row button { min-height: 44px; }
       .logs-header, .backup-actions {
         display: flex;
         align-items: center;
@@ -70,7 +70,7 @@
       .log-list { display: grid; gap: 8px; margin-top: 12px; }
       .log-row {
         display: grid;
-        grid-template-columns: 110px 120px 1fr 72px;
+        grid-template-columns: 96px 104px minmax(0, 1fr) 64px;
         gap: 8px;
         align-items: center;
       }
@@ -89,12 +89,28 @@
         line-height: 1.5;
       }
       @media (max-width: 640px) {
-        .app { padding: 16px; }
+        .app { padding: 12px; }
         .top-bar { grid-template-columns: 74px 1fr 74px; gap: 8px; }
-        .button-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .button-row {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 6px;
+        }
+        .button-row button {
+          min-height: 40px;
+          padding: 6px 4px;
+          font-size: 0.9rem;
+        }
         .logs-header { align-items: stretch; flex-direction: column; }
-        .log-row { grid-template-columns: 1fr 1fr; }
+        .log-row {
+          grid-template-columns: 82px minmax(86px, 1fr) 56px;
+          gap: 6px;
+          align-items: start;
+          border-top: 1px solid #e2dfd5;
+          padding-top: 8px;
+        }
         .memo-input { grid-column: 1 / -1; }
+        .delete { padding: 6px 4px; }
+        .backup-actions button { flex: 1 1 140px; }
       }
     </style>
   </head>
@@ -165,39 +181,23 @@
       const restoreButton = document.querySelector('#restoreButton');
       const backupTextElement = document.querySelector('#backupText');
 
-      function pad(value) {
-        return String(value).padStart(2, '0');
-      }
-
-      function dateKey(date) {
-        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-      }
-
+      function pad(value) { return String(value).padStart(2, '0'); }
+      function dateKey(date) { return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`; }
       function displayDate(key) {
         const [year, month, day] = key.split('-').map(Number);
         const date = new Date(year, month - 1, day);
-        return new Intl.DateTimeFormat('ja-JP', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          weekday: 'short',
-        }).format(date);
+        return new Intl.DateTimeFormat('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }).format(date);
       }
-
       function shiftDate(key, days) {
         const [year, month, day] = key.split('-').map(Number);
         return dateKey(new Date(year, month - 1, day + days));
       }
-
       function roundToFiveMinutes(date) {
         const hours = date.getHours();
         const minutes = Math.round(date.getMinutes() / 5) * 5;
-        if (minutes === 60) {
-          return hours === 23 ? '23:55' : `${pad(hours + 1)}:00`;
-        }
+        if (minutes === 60) return hours === 23 ? '23:55' : `${pad(hours + 1)}:00`;
         return `${pad(hours)}:${pad(minutes)}`;
       }
-
       function normalizeTime(value) {
         if (!value) return '00:00';
         const [hourPart, minutePart = '0'] = value.split(':');
@@ -205,38 +205,22 @@
         const minutes = Math.min(55, Math.max(0, Math.round((Number(minutePart) || 0) / 5) * 5));
         return `${pad(hours)}:${pad(minutes)}`;
       }
-
       function loadStore() {
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
           return raw ? JSON.parse(raw) : {};
-        } catch {
-          return {};
-        }
+        } catch { return {}; }
       }
-
-      function saveStore() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-      }
-
+      function saveStore() { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); }
       function backupText() {
-        return JSON.stringify({
-          version: 1,
-          exportedAt: new Date().toISOString(),
-          data: store,
-        }, null, 2);
+        return JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), data: store }, null, 2);
       }
-
-      function currentLogs() {
-        return sortLogs(store[selectedDate] || []);
-      }
-
+      function currentLogs() { return sortLogs(store[selectedDate] || []); }
       function setCurrentLogs(logs) {
         store = { ...store, [selectedDate]: sortLogs(logs) };
         saveStore();
         render();
       }
-
       function sortLogs(logs) {
         return [...logs].sort((a, b) => {
           const timeCompare = a.time.localeCompare(b.time);
@@ -244,24 +228,15 @@
           return a.createdAt - b.createdAt;
         });
       }
-
       function createId() {
         if (crypto.randomUUID) return crypto.randomUUID();
         return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       }
-
       function addLog(type) {
-        const log = {
-          id: createId(),
-          time: roundToFiveMinutes(new Date()),
-          type,
-          memo: draftMemoInput.value.trim(),
-          createdAt: Date.now(),
-        };
+        const log = { id: createId(), time: roundToFiveMinutes(new Date()), type, memo: draftMemoInput.value.trim(), createdAt: Date.now() };
         draftMemoInput.value = '';
         setCurrentLogs([...currentLogs(), log]);
       }
-
       function updateLog(id, field, value) {
         const logs = currentLogs().map((log) => {
           if (log.id !== id) return log;
@@ -269,11 +244,7 @@
         });
         setCurrentLogs(logs);
       }
-
-      function deleteLog(id) {
-        setCurrentLogs(currentLogs().filter((log) => log.id !== id));
-      }
-
+      function deleteLog(id) { setCurrentLogs(currentLogs().filter((log) => log.id !== id)); }
       function plainText() {
         const lines = [displayDate(selectedDate)];
         for (const log of currentLogs()) {
@@ -282,15 +253,12 @@
         }
         return lines.join('\n');
       }
-
       async function copyPlainText() {
         const text = plainText();
         try {
           await navigator.clipboard.writeText(text);
           copyButton.textContent = 'コピー済み';
-          window.setTimeout(() => {
-            copyButton.textContent = 'テキストコピー';
-          }, 1500);
+          window.setTimeout(() => { copyButton.textContent = 'テキストコピー'; }, 1500);
         } catch {
           const selection = window.getSelection();
           const range = document.createRange();
@@ -301,28 +269,23 @@
           selection.removeAllRanges();
         }
       }
-
       async function copyBackup() {
         const text = backupText();
         backupTextElement.value = text;
         try {
           await navigator.clipboard.writeText(text);
           backupCopyButton.textContent = 'コピー済み';
-          window.setTimeout(() => {
-            backupCopyButton.textContent = 'バックアップをコピー';
-          }, 1500);
+          window.setTimeout(() => { backupCopyButton.textContent = 'バックアップをコピー'; }, 1500);
         } catch {
           backupTextElement.focus();
           backupTextElement.select();
           document.execCommand('copy');
         }
       }
-
       function restoreBackup() {
         let parsed;
-        try {
-          parsed = JSON.parse(backupTextElement.value);
-        } catch {
+        try { parsed = JSON.parse(backupTextElement.value); }
+        catch {
           alert('バックアップの形式が正しくありません。');
           return;
         }
@@ -331,15 +294,12 @@
           alert('復元できるデータが見つかりません。');
           return;
         }
-        if (!confirm('現在の保存データを、貼り付けたバックアップで置き換えます。よろしいですか？')) {
-          return;
-        }
+        if (!confirm('現在の保存データを、貼り付けたバックアップで置き換えます。よろしいですか？')) return;
         store = nextStore;
         saveStore();
         render();
         alert('復元しました。');
       }
-
       function renderLogs() {
         const logs = currentLogs();
         logListElement.innerHTML = '';
@@ -394,21 +354,13 @@
         }
         logListElement.append(list);
       }
-
       function render() {
         displayDateElement.textContent = displayDate(selectedDate);
         renderLogs();
         copyPreviewElement.textContent = plainText();
       }
-
-      prevDateButton.addEventListener('click', () => {
-        selectedDate = shiftDate(selectedDate, -1);
-        render();
-      });
-      nextDateButton.addEventListener('click', () => {
-        selectedDate = shiftDate(selectedDate, 1);
-        render();
-      });
+      prevDateButton.addEventListener('click', () => { selectedDate = shiftDate(selectedDate, -1); render(); });
+      nextDateButton.addEventListener('click', () => { selectedDate = shiftDate(selectedDate, 1); render(); });
       copyButton.addEventListener('click', copyPlainText);
       backupCopyButton.addEventListener('click', copyBackup);
       restoreButton.addEventListener('click', restoreBackup);
@@ -416,7 +368,6 @@
         const button = event.target.closest('[data-log-type]');
         if (button) addLog(button.dataset.logType);
       });
-
       render();
     </script>
   </body>
